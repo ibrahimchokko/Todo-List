@@ -1,6 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:todo_list/widgets/dashboard.dart';
-import 'dart:async';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -15,16 +15,22 @@ class _HomepageState extends State<Homepage> {
   // Add Task Logic
   void _addTask(String title, {int? durationInSeconds}) {
     setState(() {
-      _tasks.add(Task(title: title, durationInSeconds: durationInSeconds));
+      _tasks.add(Task(
+        title: title,
+        durationInSeconds: durationInSeconds,
+      ));
     });
   }
 
-  // Toggle Completion (manual checkbox)
+  // Toggle Completion (Instant complete)
   void _toggleTaskCompletion(int index) {
     setState(() {
-      _tasks[index].isCompleted = !_tasks[index].isCompleted;
-      if (_tasks[index].isCompleted) {
-        _tasks[index].isRunning = false; // stop timer if running
+      final task = _tasks[index];
+      task.isCompleted = !task.isCompleted;
+      if (task.isCompleted) {
+        task.stopTimer();
+      } else if (task.durationInSeconds != null && task.durationInSeconds! > 0) {
+        task.restartTimer();
       }
     });
   }
@@ -32,15 +38,16 @@ class _HomepageState extends State<Homepage> {
   // Remove Task
   void _removeTask(int index) {
     setState(() {
+      _tasks[index].dispose();
       _tasks.removeAt(index);
     });
   }
 
-  // Show Input Dialog (with timer input)
+  // Show Input Dialog
   void _showAddTaskDialog() {
-    String title = "";
-    int minutes = 0;
-    int seconds = 0;
+    String newTask = "";
+    String timerMinutes = "";
+    String timerSeconds = "";
 
     showDialog(
       context: context,
@@ -51,37 +58,44 @@ class _HomepageState extends State<Homepage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                decoration: const InputDecoration(labelText: "Task Title"),
-                onChanged: (value) => title = value,
+                onChanged: (value) => newTask = value,
+                decoration: const InputDecoration(hintText: "Enter task name"),
               ),
               const SizedBox(height: 10),
               TextField(
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Minutes"),
-                onChanged: (value) => minutes = int.tryParse(value) ?? 0,
+                onChanged: (value) => timerMinutes = value,
+                decoration:
+                    const InputDecoration(hintText: "Minutes (optional)"),
               ),
               const SizedBox(height: 10),
               TextField(
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Seconds"),
-                onChanged: (value) => seconds = int.tryParse(value) ?? 0,
+                onChanged: (value) => timerSeconds = value,
+                decoration:
+                    const InputDecoration(hintText: "Seconds (optional)"),
               ),
             ],
           ),
           actions: [
             TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
               onPressed: () {
-                if (title.isNotEmpty) {
-                  setState(() {
-                    _tasks.add(Task(
-                      title: title,
-                      minutes: minutes,
-                      seconds: seconds,
-                      remainingTime: Duration(minutes: minutes, seconds: seconds),
-                    ));
-                  });
+                if (newTask.trim().isNotEmpty) {
+                  int totalSeconds = 0;
+                  if (timerMinutes.isNotEmpty) {
+                    totalSeconds += (int.tryParse(timerMinutes) ?? 0) * 60;
+                  }
+                  if (timerSeconds.isNotEmpty) {
+                    totalSeconds += int.tryParse(timerSeconds) ?? 0;
+                  }
+                  _addTask(newTask.trim(),
+                      durationInSeconds: totalSeconds > 0 ? totalSeconds : null);
                 }
-                Navigator.of(context).pop();
+                Navigator.pop(context);
               },
               child: const Text("Add"),
             ),
@@ -91,43 +105,9 @@ class _HomepageState extends State<Homepage> {
     );
   }
 
-  // Start Timer
-  void _startTimer(Task task) {
-    if (task.remainingTime == null || task.remainingTime!.inSeconds <= 0) return;
-
-    task.isRunning = true;
-
-    Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!task.isRunning) {
-        timer.cancel();
-        return;
-      }
-
-      if (task.remainingTime!.inSeconds > 0) {
-        setState(() {
-          task.remainingTime = task.remainingTime! - const Duration(seconds: 1);
-        });
-      } else {
-        timer.cancel();
-        setState(() {
-          task.isRunning = false;
-          task.isCompleted = true; // ✅ auto-complete when timer ends
-        });
-      }
-    });
-  }
-
-  // Pause Timer
-  void _pauseTimer(Task task) {
-    setState(() {
-      task.isRunning = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final int pendingCount =
-        _tasks.where((task) => !task.isCompleted).length;
+    final int pendingCount = _tasks.where((task) => !task.isCompleted).length;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -139,10 +119,7 @@ class _HomepageState extends State<Homepage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Dashboard shows pending count
             Dashboard(pendingCount: pendingCount),
-
-            // Task list
             Expanded(
               child: _tasks.isEmpty
                   ? const Center(
@@ -155,50 +132,57 @@ class _HomepageState extends State<Homepage> {
                       itemCount: _tasks.length,
                       itemBuilder: (context, index) {
                         final task = _tasks[index];
-                        final timeLeft = task.remainingTime ?? Duration.zero;
-
-                        String formattedTime =
-                            "${timeLeft.inMinutes.remainder(60).toString().padLeft(2, '0')}:${(timeLeft.inSeconds.remainder(60)).toString().padLeft(2, '0')}";
-
                         return ListTile(
                           leading: Checkbox(
                             value: task.isCompleted,
-                            onChanged: (value) {
-                              _toggleTaskCompletion(index);
-                            },
+                            onChanged: (value) => _toggleTaskCompletion(index),
                           ),
                           title: Text(
                             task.title,
                             style: TextStyle(
                               decoration: task.isCompleted
                                   ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
+                                  : null,
+                              color:
+                                  task.isCompleted ? Colors.grey : Colors.black,
                             ),
                           ),
-                          subtitle: task.isCompleted
-                              ? const Text("✅ Task Completed")
-                              : Text("⏳ Time Left: $formattedTime"),
+                          subtitle: task.durationInSeconds != null
+                              ? StreamBuilder<int>(
+                                  stream: task.timerStream,
+                                  builder: (context, snapshot) {
+                                    final remaining = snapshot.data ??
+                                        task.remainingDuration ??
+                                        task.durationInSeconds!;
+                                    final minutes = remaining ~/ 60;
+                                    final seconds = remaining % 60;
+                                    return Text(
+                                      task.isCompleted
+                                          ? "Completed ✅"
+                                          : "Timer: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}",
+                                    );
+                                  },
+                                )
+                              : task.isCompleted
+                                  ? const Text("Completed ✅")
+                                  : null,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (!task.isCompleted)
+                              if (task.durationInSeconds != null)
                                 IconButton(
-                                  icon: Icon(
-                                    task.isRunning
-                                        ? Icons.pause
-                                        : Icons.play_arrow,
-                                  ),
+                                  icon: const Icon(Icons.refresh,
+                                      color: Colors.blueAccent),
                                   onPressed: () {
-                                    task.isRunning
-                                        ? _pauseTimer(task)
-                                        : _startTimer(task);
+                                    setState(() {
+                                      task.restartTimer();
+                                    });
                                   },
                                 ),
                               IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  _removeTask(index);
-                                },
+                                icon: const Icon(Icons.delete,
+                                    color: Colors.redAccent),
+                                onPressed: () => _removeTask(index),
                               ),
                             ],
                           ),
@@ -213,21 +197,55 @@ class _HomepageState extends State<Homepage> {
   }
 }
 
+// Task Model with Timer
 class Task {
   String title;
   bool isCompleted;
-  int? minutes;
-  int? seconds;
-  Duration? remainingTime;
-  bool isRunning;
+  int? durationInSeconds;
+  int? remainingDuration;
+  final StreamController<int> _timerController =
+      StreamController<int>.broadcast();
+  Stream<int> get timerStream => _timerController.stream;
+  Timer? _timer;
 
   Task({
     required this.title,
     this.isCompleted = false,
-    this.minutes,
-    this.seconds,
-    this.remainingTime,
-    this.isRunning = false,
-    int? durationInSeconds,
-  });
+    this.durationInSeconds,
+  }) {
+    if (durationInSeconds != null && durationInSeconds! > 0) {
+      restartTimer();
+    }
+  }
+
+  void restartTimer() {
+    stopTimer();
+    if (durationInSeconds != null && durationInSeconds! > 0) {
+      remainingDuration = durationInSeconds!;
+      isCompleted = false;
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (isCompleted) {
+          timer.cancel();
+          return;
+        }
+        if (remainingDuration! > 0) {
+          remainingDuration = remainingDuration! - 1;
+          _timerController.add(remainingDuration!);
+        } else {
+          timer.cancel();
+          isCompleted = true;
+          _timerController.add(0);
+        }
+      });
+    }
+  }
+
+  void stopTimer() {
+    _timer?.cancel();
+  }
+
+  void dispose() {
+    stopTimer();
+    _timerController.close();
+  }
 }
