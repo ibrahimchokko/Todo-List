@@ -19,10 +19,13 @@ class _HomepageState extends State<Homepage> {
     });
   }
 
-  // Toggle Completion
+  // Toggle Completion (manual checkbox)
   void _toggleTaskCompletion(int index) {
     setState(() {
       _tasks[index].isCompleted = !_tasks[index].isCompleted;
+      if (_tasks[index].isCompleted) {
+        _tasks[index].isRunning = false; // stop timer if running
+      }
     });
   }
 
@@ -95,7 +98,12 @@ class _HomepageState extends State<Homepage> {
     task.isRunning = true;
 
     Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (task.remainingTime!.inSeconds > 0 && task.isRunning) {
+      if (!task.isRunning) {
+        timer.cancel();
+        return;
+      }
+
+      if (task.remainingTime!.inSeconds > 0) {
         setState(() {
           task.remainingTime = task.remainingTime! - const Duration(seconds: 1);
         });
@@ -103,6 +111,7 @@ class _HomepageState extends State<Homepage> {
         timer.cancel();
         setState(() {
           task.isRunning = false;
+          task.isCompleted = true; // ✅ auto-complete when timer ends
         });
       }
     });
@@ -152,23 +161,39 @@ class _HomepageState extends State<Homepage> {
                             "${timeLeft.inMinutes.remainder(60).toString().padLeft(2, '0')}:${(timeLeft.inSeconds.remainder(60)).toString().padLeft(2, '0')}";
 
                         return ListTile(
-                          title: Text(task.title),
-                          subtitle: Text("Time Left: $formattedTime"),
+                          leading: Checkbox(
+                            value: task.isCompleted,
+                            onChanged: (value) {
+                              _toggleTaskCompletion(index);
+                            },
+                          ),
+                          title: Text(
+                            task.title,
+                            style: TextStyle(
+                              decoration: task.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                            ),
+                          ),
+                          subtitle: task.isCompleted
+                              ? const Text("✅ Task Completed")
+                              : Text("⏳ Time Left: $formattedTime"),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: Icon(
-                                  task.isRunning
-                                      ? Icons.pause
-                                      : Icons.play_arrow,
+                              if (!task.isCompleted)
+                                IconButton(
+                                  icon: Icon(
+                                    task.isRunning
+                                        ? Icons.pause
+                                        : Icons.play_arrow,
+                                  ),
+                                  onPressed: () {
+                                    task.isRunning
+                                        ? _pauseTimer(task)
+                                        : _startTimer(task);
+                                  },
                                 ),
-                                onPressed: () {
-                                  task.isRunning
-                                      ? _pauseTimer(task)
-                                      : _startTimer(task);
-                                },
-                              ),
                               IconButton(
                                 icon: const Icon(Icons.delete),
                                 onPressed: () {
