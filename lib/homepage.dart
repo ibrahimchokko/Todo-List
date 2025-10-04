@@ -15,10 +15,7 @@ class _HomepageState extends State<Homepage> {
   // Add Task Logic
   void _addTask(String title, {int? durationInSeconds}) {
     setState(() {
-      _tasks.add(Task(
-        title: title,
-        durationInSeconds: durationInSeconds,
-      ));
+      _tasks.add(Task(title: title, durationInSeconds: durationInSeconds));
     });
   }
 
@@ -29,7 +26,8 @@ class _HomepageState extends State<Homepage> {
       task.isCompleted = !task.isCompleted;
       if (task.isCompleted) {
         task.stopTimer();
-      } else if (task.durationInSeconds != null && task.durationInSeconds! > 0) {
+      } else if (task.durationInSeconds != null &&
+          task.durationInSeconds! > 0) {
         task.restartTimer();
       }
     });
@@ -65,15 +63,17 @@ class _HomepageState extends State<Homepage> {
               TextField(
                 keyboardType: TextInputType.number,
                 onChanged: (value) => timerMinutes = value,
-                decoration:
-                    const InputDecoration(hintText: "Minutes (optional)"),
+                decoration: const InputDecoration(
+                  hintText: "Minutes (optional)",
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
                 keyboardType: TextInputType.number,
                 onChanged: (value) => timerSeconds = value,
-                decoration:
-                    const InputDecoration(hintText: "Seconds (optional)"),
+                decoration: const InputDecoration(
+                  hintText: "Seconds (optional)",
+                ),
               ),
             ],
           ),
@@ -92,8 +92,10 @@ class _HomepageState extends State<Homepage> {
                   if (timerSeconds.isNotEmpty) {
                     totalSeconds += int.tryParse(timerSeconds) ?? 0;
                   }
-                  _addTask(newTask.trim(),
-                      durationInSeconds: totalSeconds > 0 ? totalSeconds : null);
+                  _addTask(
+                    newTask.trim(),
+                    durationInSeconds: totalSeconds > 0 ? totalSeconds : null,
+                  );
                 }
                 Navigator.pop(context);
               },
@@ -143,15 +145,17 @@ class _HomepageState extends State<Homepage> {
                               decoration: task.isCompleted
                                   ? TextDecoration.lineThrough
                                   : null,
-                              color:
-                                  task.isCompleted ? Colors.grey : Colors.black,
+                              color: task.isCompleted
+                                  ? Colors.grey
+                                  : Colors.black,
                             ),
                           ),
                           subtitle: task.durationInSeconds != null
                               ? StreamBuilder<int>(
                                   stream: task.timerStream,
                                   builder: (context, snapshot) {
-                                    final remaining = snapshot.data ??
+                                    final remaining =
+                                        snapshot.data ??
                                         task.remainingDuration ??
                                         task.durationInSeconds!;
                                     final minutes = remaining ~/ 60;
@@ -164,15 +168,17 @@ class _HomepageState extends State<Homepage> {
                                   },
                                 )
                               : task.isCompleted
-                                  ? const Text("Completed ✅")
-                                  : null,
+                              ? const Text("Completed ✅")
+                              : null,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               if (task.durationInSeconds != null)
                                 IconButton(
-                                  icon: const Icon(Icons.refresh,
-                                      color: Colors.blueAccent),
+                                  icon: const Icon(
+                                    Icons.refresh,
+                                    color: Colors.blueAccent,
+                                  ),
                                   onPressed: () {
                                     setState(() {
                                       task.restartTimer();
@@ -180,8 +186,10 @@ class _HomepageState extends State<Homepage> {
                                   },
                                 ),
                               IconButton(
-                                icon: const Icon(Icons.delete,
-                                    color: Colors.redAccent),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.redAccent,
+                                ),
                                 onPressed: () => _removeTask(index),
                               ),
                             ],

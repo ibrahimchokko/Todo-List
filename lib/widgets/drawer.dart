@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo_list/profile.dart';
-
+import 'package:todo_list/settings.dart';
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
@@ -39,9 +39,7 @@ class MyDrawer extends StatelessWidget {
               // Navigate to Home screen
             },
           ),
-          SizedBox(
-            height: 10,
-          ),
+          SizedBox(height: 10),
           ListTile(
             leading: Icon(Icons.person),
             title: Text("Profile"),
@@ -54,20 +52,20 @@ class MyDrawer extends StatelessWidget {
               // Navigate to Profile screen
             },
           ),
-          SizedBox(
-            height: 10,
-          ),
+          SizedBox(height: 10),
           ListTile(
             leading: Icon(Icons.settings),
             title: Text("Settings"),
             onTap: () {
               Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
               // Navigate to Settings screen
             },
-          ), 
-          SizedBox(
-            height: 10,
           ),
+          SizedBox(height: 10),
           Divider(), // adds a line break
           ListTile(
             leading: Icon(Icons.logout, color: Colors.red),
