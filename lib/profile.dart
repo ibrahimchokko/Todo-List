@@ -1,3 +1,6 @@
+// Simple profile screen used from the app drawer.
+// This is primarily a static placeholder demonstrating typical profile
+// UI parts: avatar, name, bio, contact info and an edit action.
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -16,7 +19,8 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Profile Picture
+            // Profile Picture (network image). In production replace with
+            // a locally cached image or user-uploaded avatar.
             CircleAvatar(
               radius: 60,
               backgroundColor: Colors.blueGrey.shade100,
@@ -44,7 +48,7 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Bio / Description
+            // Bio / Description card
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -64,7 +68,7 @@ class ProfilePage extends StatelessWidget {
                     Text(
                       "Passionate Flutter developer and content creator. "
                       "Loves building intuitive apps and experimenting with UI/UX design. "
-                      "Coffee addict ☕, gamer 🎮, and lifelong learner. ",
+                      "Coffee addict \u2615, gamer \ud83c\udfae, and lifelong learner. ",
                       style: TextStyle(fontSize: 16, height: 1.4),
                     ),
                   ],
@@ -73,7 +77,7 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Account Information
+            // Account Information (static placeholders)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -97,10 +101,10 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Action Buttons
+            // Action Buttons - Edit profile is a placeholder for future logic.
             ElevatedButton.icon(
               onPressed: () {
-                // Edit Profile logic
+                // Edit Profile logic (not implemented) — kept as a stub.
               },
               icon: const Icon(Icons.edit),
               label: const Text("Edit Profile"),

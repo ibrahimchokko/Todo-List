@@ -1,3 +1,7 @@
+// Main homepage with task list and task model.
+// This file contains the Homepage widget that manages an in-memory list
+// of Task objects, UI to add/remove tasks, and a Task model with a
+// simple countdown timer implemented using Timer and a StreamController.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:todo_list/widgets/dashboard.dart';
@@ -25,9 +29,11 @@ class _HomepageState extends State<Homepage> {
       final task = _tasks[index];
       task.isCompleted = !task.isCompleted;
       if (task.isCompleted) {
+        // If the user marks the task completed, stop its timer (if any).
         task.stopTimer();
       } else if (task.durationInSeconds != null &&
           task.durationInSeconds! > 0) {
+        // If unchecking a timed task, restart the countdown.
         task.restartTimer();
       }
     });
@@ -84,6 +90,7 @@ class _HomepageState extends State<Homepage> {
             ),
             ElevatedButton(
               onPressed: () {
+                // Only add a task when a non-empty name is provided.
                 if (newTask.trim().isNotEmpty) {
                   int totalSeconds = 0;
                   if (timerMinutes.isNotEmpty) {
@@ -109,7 +116,8 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
-    final int pendingCount = _tasks.where((task) => !task.isCompleted).length;
+  // Calculate pending tasks for the dashboard widget.
+  final int pendingCount = _tasks.where((task) => !task.isCompleted).length;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -134,6 +142,9 @@ class _HomepageState extends State<Homepage> {
                       itemCount: _tasks.length,
                       itemBuilder: (context, index) {
                         final task = _tasks[index];
+                        // Each task is represented by a ListTile with a
+                        // leading checkbox, title, optional timer subtitle
+                        // and trailing actions (reset/delete).
                         return ListTile(
                           leading: Checkbox(
                             value: task.isCompleted,
@@ -150,6 +161,10 @@ class _HomepageState extends State<Homepage> {
                                   : Colors.black,
                             ),
                           ),
+                          // If the task has a duration, show a live-updating
+                          // timer using a StreamBuilder that listens to the
+                          // Task.timerStream. Otherwise show a static "Completed"
+                          // label when appropriate.
                           subtitle: task.durationInSeconds != null
                               ? StreamBuilder<int>(
                                   stream: task.timerStream,
@@ -162,13 +177,13 @@ class _HomepageState extends State<Homepage> {
                                     final seconds = remaining % 60;
                                     return Text(
                                       task.isCompleted
-                                          ? "Completed ✅"
+                                          ? "Completed \u2705"
                                           : "Timer: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}",
                                     );
                                   },
                                 )
                               : task.isCompleted
-                              ? const Text("Completed ✅")
+                              ? const Text("Completed \u2705")
                               : null,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,

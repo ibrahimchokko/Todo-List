@@ -1,10 +1,14 @@
+// A small dashboard card displayed at the top of the homepage.
+// Currently shows the number of pending tasks passed from the parent.
 import 'package:flutter/material.dart';
 
 class Dashboard extends StatelessWidget {
   final int pendingCount; 
   const Dashboard({super.key, required this.pendingCount});
 
-  // final List<String> _tasks = ["Finish Flutter project", "Buy groceries"];
+  // The dashboard is visual only and doesn't manage any state. For
+  // future improvements this could be expanded to show completed tasks,
+  // focus sessions, or productivity streaks.
   @override
   Widget build(BuildContext context) {
     return SafeArea(

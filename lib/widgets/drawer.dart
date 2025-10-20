@@ -1,3 +1,6 @@
+// App drawer shown from the main scaffold. Provides navigation to Home,
+// Profile and Settings. Drawer content is static for now and uses
+// Navigator.push for screen transitions.
 import 'package:flutter/material.dart';
 import 'package:todo_list/profile.dart';
 import 'package:todo_list/settings.dart';
@@ -11,7 +14,9 @@ class MyDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Profile Header Section
+          // Profile Header Section shown at the top of the drawer. In a
+          // real app, these values should come from the authenticated
+          // user's profile data.
           UserAccountsDrawerHeader(
             decoration: BoxDecoration(color: Colors.blueGrey.shade800),
             accountName: Text(
@@ -36,7 +41,7 @@ class MyDrawer extends StatelessWidget {
             title: Text("Home"),
             onTap: () {
               Navigator.pop(context);
-              // Navigate to Home screen
+              // Navigate to Home screen (already the root of the app).
             },
           ),
           SizedBox(height: 10),
@@ -72,7 +77,8 @@ class MyDrawer extends StatelessWidget {
             title: Text("Logout", style: TextStyle(color: Colors.red)),
             onTap: () {
               Navigator.pop(context);
-              // Handle logout
+              // Handle logout - currently a stub. Integrate authentication
+              // logic here when available.
             },
           ),
         ],
